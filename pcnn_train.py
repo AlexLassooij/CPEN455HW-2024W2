@@ -82,6 +82,10 @@ if __name__ == '__main__':
                         help='Batch size during sampling per GPU')
     parser.add_argument('-x', '--max_epochs', type=int,
                         default=5000, help='How many epochs to run in total?')
+    parser.add_argument('-ed', '--embedding_dim', type=int,
+                        default=32, help='Embedding dimension for class embeddings')
+    parser.add_argument('--model', type=str,
+                        default=None, help='Type of model to use')
     parser.add_argument('-s', '--seed', type=int, default=1,
                         help='Random seed to use')
     
@@ -119,6 +123,9 @@ if __name__ == '__main__':
 
     #set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device('cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else 'cpu'))
+    print('Using device: {}'.format(device))
+
     #Reminder: if you have patience to read code line by line, you should notice this comment. here is the reason why we set num_workers to 0:
     #In order to avoid pickling errors with the dataset on different machines, we set num_workers to 0.
     #If you are using ubuntu/linux/colab, and find that loading data is too slow, you can set num_workers to 1 or even bigger.
@@ -180,8 +187,17 @@ if __name__ == '__main__':
     loss_op   = lambda real, fake : discretized_mix_logistic_loss(real, fake)
     sample_op = lambda x : sample_from_discretized_mix_logistic(x, args.nr_logistic_mix)
 
-    model = PixelCNN(nr_resnet=args.nr_resnet, nr_filters=args.nr_filters, 
+    model = None
+    if args.model == 'conditional':
+        print('Using conditional model')
+        model = ConditionalPixelCNN(nr_resnet=args.nr_resnet, nr_filters=args.nr_filters, 
+            input_channels=input_channels, nr_logistic_mix=args.nr_logistic_mix,
+            num_classes=4, embedding_dim=32)
+    else:
+        model = PixelCNN(nr_resnet=args.nr_resnet, nr_filters=args.nr_filters, 
                 input_channels=input_channels, nr_logistic_mix=args.nr_logistic_mix)
+    
+    
     model = model.to(device)
 
     if args.load_params:
@@ -221,6 +237,7 @@ if __name__ == '__main__':
                       epoch = epoch,
                       mode = 'val')
         
+        # generate samples to assess generative performance
         if epoch % args.sampling_interval == 0:
             print('......sampling......')
             sample_t = sample(model, args.sample_batch_size, args.obs, sample_op)
@@ -241,6 +258,7 @@ if __name__ == '__main__':
                 wandb.log({"samples": sample_result,
                             "FID": fid_score})
         
+        # save checkpoint of model
         if (epoch + 1) % args.save_interval == 0: 
             if not os.path.exists("models"):
                 os.makedirs("models")
