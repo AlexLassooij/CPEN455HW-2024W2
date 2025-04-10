@@ -32,6 +32,11 @@ def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, m
         if mode == 'training':
             optimizer.zero_grad()
             loss.backward()
+            if epoch < args.warmup_epochs:
+                # Linear warmup
+                lr_scale = min(1., 0.5 + float(epoch + 1) / (2* float(args.warmup_epochs)))
+                for pg in optimizer.param_groups:
+                    pg['lr'] = args.lr * lr_scale
             optimizer.step()
         
     if args.en_wandb:
@@ -76,6 +81,11 @@ if __name__ == '__main__':
                         default=0.0002, help='Base learning rate')
     parser.add_argument('-e', '--lr_decay', type=float, default=0.999995,
                         help='Learning rate decay, applied every step of the optimization')
+    parser.add_argument('-we', '--warmup_epochs', type=float, default=0.999995,
+                        help='Learning rate decay, applied every step of the optimization')
+    parser.add_argument('--min_lr', type=float, default=0.999995,
+                        help='Learning rate decay, applied every step of the optimization')
+    
     parser.add_argument('-b', '--batch_size', type=int, default=64,
                         help='Batch size during training per GPU')
     parser.add_argument('-sb', '--sample_batch_size', type=int, default=32,
@@ -97,7 +107,8 @@ if __name__ == '__main__':
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     
-    model_name = 'pcnn_' + args.dataset + "_"
+    # added tag to model name to associate models to parameter configs
+    model_name = 'pcnn_' + args.dataset + "_" + args.tag + "_"
     model_path = args.save_dir + '/'
     if args.load_params is not None:
         model_name = model_name + 'load_model'
@@ -133,7 +144,10 @@ if __name__ == '__main__':
 
     # set data
     if "mnist" in args.dataset:
-        ds_transforms = transforms.Compose([transforms.Resize((32, 32)), transforms.ToTensor(), rescaling, replicate_color_channel])
+        ds_transforms = transforms.Compose([
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
+            transforms.Resize((32, 32)), transforms.ToTensor(), rescaling, replicate_color_channel])
         train_loader = torch.utils.data.DataLoader(datasets.MNIST(args.data_dir, download=True, 
                             train=True, transform=ds_transforms), batch_size=args.batch_size, 
                                 shuffle=True, **kwargs)
@@ -205,7 +219,10 @@ if __name__ == '__main__':
         print('model parameters loaded')
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.lr_decay)
+    # scheduler = lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.lr_decay)
+    
+    scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.max_epochs, eta_min=args.min_lr
+)
     
     for epoch in tqdm(range(args.max_epochs)):
         train_or_test(model = model, 
