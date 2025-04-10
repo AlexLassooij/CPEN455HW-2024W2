@@ -10,5 +10,5 @@ python pcnn_train.py \
 --lr_decay 0.9999 \
 --max_epochs 300 \
 --embedding_dim 64 \
---model conditional \ 
+--model conditional \
 --en_wandb True
