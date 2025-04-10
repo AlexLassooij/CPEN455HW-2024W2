@@ -13,4 +13,5 @@ python pcnn_train.py \
 --warmup_epochs 150 \
 --embedding_dim 64 \
 --model conditional \
+--tag conditional_lr \
 --en_wandb True
