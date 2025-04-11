@@ -116,7 +116,7 @@ skip connection parameter : 0 = no skip connection
                             2 = skip connection where skip input size === 2 * input size
 '''
 class gated_resnet(nn.Module):
-    def __init__(self, num_filters, conv_op, nonlinearity=concat_elu, skip_connection=0):
+    def __init__(self, num_filters, conv_op, nonlinearity=concat_elu, skip_connection=0, embedding_dim=None):
         super(gated_resnet, self).__init__()
         self.skip_connection = skip_connection
         self.nonlinearity = nonlinearity
@@ -125,16 +125,33 @@ class gated_resnet(nn.Module):
         if skip_connection != 0 :
             self.nin_skip = nin(2 * skip_connection * num_filters, num_filters)
 
+        # to project from filter + embedding dim back to original filter dim
+        if embedding_dim is not None:
+            self.class_proj = nin(2 * num_filters + embedding_dim, 2 * num_filters)  # +32 for class embedding dim
+
         self.dropout = nn.Dropout2d(0.5)
         self.conv_out = conv_op(2 * num_filters, 2 * num_filters)
 
 
-    def forward(self, og_x, a=None):
+    def forward(self, og_x, a=None, class_embedding=None):
         x = self.conv_input(self.nonlinearity(og_x))
         if a is not None :
             x += self.nin_skip(self.nonlinearity(a))
         x = self.nonlinearity(x)
         x = self.dropout(x)
+        # print(f"In resnet {x.shape}")
+        if class_embedding is not None:
+            # print(f"Class embedding {class_embedding.shape}")
+            class_embedding = class_embedding.unsqueeze(-1).unsqueeze(-1)
+            
+            # class_embedding = class_embedding.expand(-1, -1, x.size(2), x.size(3))
+            embed_spatial = class_embedding.expand(-1, -1, 1, 1)  # Keep it as [batch, embed_dim, 1, 1]
+            embed_spatial = F.interpolate(embed_spatial, size=(x.size(2), x.size(3)), mode='nearest')
+            # print(f"After expand {embed_spatial.shape}")
+            x = torch.cat([x, embed_spatial], dim=1)
+            # print(f"After cat {x.shape}")
+            x = self.class_proj(x)
+            # print(f"After proj {x.shape}")
         x = self.conv_out(x)
         a, b = torch.chunk(x, 2, dim=1)
         c3 = a * F.sigmoid(b)
