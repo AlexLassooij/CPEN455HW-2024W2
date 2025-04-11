@@ -26,10 +26,11 @@ def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, m
     for batch_idx, item in enumerate(tqdm(data_loader)):
         model_input, class_labels = item
         model_input = model_input.to(device)
-        class_labels = None
-        if mode is not 'test':
+        if mode == 'training':
             class_labels = [my_bidict[label] for label in class_labels]  # Convert text labels to indices
             class_labels = torch.tensor(class_labels, dtype=torch.long).to(device)
+        else:
+            class_labels = None
         model_output = model(model_input, class_labels)
         loss = loss_op(model_input, model_output)
         loss_tracker.update(loss.item()/deno)
