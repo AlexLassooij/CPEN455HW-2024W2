@@ -275,9 +275,14 @@ if __name__ == '__main__':
         # generate samples to assess generative performance
         if epoch % args.sampling_interval == 0:
             print('......sampling......')
-            sample_t = sample(model, args.sample_batch_size, args.obs, sample_op)
-            sample_t = rescaling_inv(sample_t)
-            save_images(sample_t, args.sample_dir)
+            all_samples = []
+            for class_idx in range(4):
+                sample_t = sample_conditional(model, args.sample_batch_size, args.obs, sample_op, class_idx)
+                sample_t = rescaling_inv(sample_t)
+                all_samples.append(sample_t)
+                
+            all_samples = torch.cat(all_samples, dim=0)
+            save_images(all_samples, args.sample_dir)
             sample_result = wandb.Image(sample_t, caption="epoch {}".format(epoch))
             
             gen_data_dir = args.sample_dir

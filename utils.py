@@ -173,11 +173,12 @@ def right_shift(x, pad=None):
     pad = nn.ZeroPad2d((1, 0, 0, 0)) if pad is None else pad
     return pad(x)
 
+# set sample batch size to 8 because we're calling this method 4 times now
 def sample_conditional(model, sample_batch_size, obs, sample_op, class_idx):
     model.train(False)
     with torch.no_grad():
         device = next(model.parameters()).device
-        class_labels = torch.full((sample_batch_size,), class_idx, dtype=torch.long).to(device)
+        class_labels = torch.full((sample_batch_size,), class_idx, dtype=torch.long, device=device)
 
         data = torch.zeros(sample_batch_size, obs[0], obs[1], obs[2])
         data = data.to(next(model.parameters()).device)
