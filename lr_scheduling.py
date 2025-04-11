@@ -13,7 +13,7 @@ num_steps_optimizer1 = 500
 epochs = 500
 warmup_epochs = 50
 scheduler1 = lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_steps_optimizer1, eta_min=0.00015, verbose=True, last_epoch=-1)
-scheduler2 = lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.9995)
+scheduler2 = lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.99995)
 
 lr_schedule = []
 
