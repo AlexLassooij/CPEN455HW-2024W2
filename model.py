@@ -38,7 +38,7 @@ class PixelCNNLayer_down(nn.Module):
                                         resnet_nonlinearity, skip_connection=1)
                                             for _ in range(nr_resnet)])
 
-        # stream from pixels above and to thes left
+        # stream from pixels above and to the left
         self.ul_stream = nn.ModuleList([gated_resnet(nr_filters, down_right_shifted_conv2d,
                                         resnet_nonlinearity, skip_connection=2)
                                             for _ in range(nr_resnet)])

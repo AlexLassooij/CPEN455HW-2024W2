@@ -16,4 +16,4 @@ python pcnn_train.py \
 --model conditional \
 --tag conditional_lr_mod \
 --scheduler step \
-# --en_wandb True
+--en_wandb True
