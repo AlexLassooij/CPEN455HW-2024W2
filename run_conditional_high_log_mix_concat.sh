@@ -14,6 +14,6 @@ python pcnn_train.py \
 --warmup_epochs 50 \
 --embedding_dim 64 \
 --model conditional \
---tag conditional_lr_mod \
+--tag conditional_high_mix_concat \
 --scheduler step \
 --en_wandb True
