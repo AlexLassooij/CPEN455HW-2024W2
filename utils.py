@@ -180,8 +180,7 @@ def sample_conditional(model, sample_batch_size, obs, sample_op, class_idx):
         device = next(model.parameters()).device
         class_labels = torch.full((sample_batch_size,), class_idx, dtype=torch.long, device=device)
 
-        data = torch.zeros(sample_batch_size, obs[0], obs[1], obs[2])
-        data = data.to(next(model.parameters()).device)
+        data = torch.zeros(sample_batch_size, obs[0], obs[1], obs[2], device=device)
         for i in range(obs[1]):
             for j in range(obs[2]):
                 data_v = data
