@@ -8,6 +8,7 @@ import wandb
 from utils import *
 from model import * 
 from dataset import *
+from classification_evaluation import classifier
 from tqdm import tqdm
 from pprint import pprint
 import argparse
@@ -17,24 +18,23 @@ from pytorch_fid.fid_score import calculate_fid_given_paths
 def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, mode = 'training'):
     if mode == 'training':
         model.train()
-    else:
-        model.eval()
+        deno =  args.batch_size * np.prod(args.obs) * np.log(2.)        
+        loss_tracker = mean_tracker()
         
-    deno =  args.batch_size * np.prod(args.obs) * np.log(2.)        
-    loss_tracker = mean_tracker()
-    
-    for batch_idx, item in enumerate(tqdm(data_loader)):
-        model_input, class_labels = item
-        model_input = model_input.to(device)
-        if mode == 'training':
+        for batch_idx, item in enumerate(tqdm(data_loader)):
+            model_input, class_labels = item
+            model_input = model_input.to(device)
             class_labels = [my_bidict[label] for label in class_labels]  # Convert text labels to indices
             class_labels = torch.tensor(class_labels, dtype=torch.long).to(device)
-        else:
-            class_labels = None
-        model_output = model(model_input, class_labels)
-        loss = loss_op(model_input, model_output)
-        loss_tracker.update(loss.item()/deno)
-        if mode == 'training':
+            
+            # if validation, get accuracy using classifier method
+            # if test, skip for now until we are confident enough to produce good predictions
+            # forward pass
+            model_output = model(model_input, class_labels)
+            loss = loss_op(model_input, model_output)
+            loss_tracker.update(loss.item()/deno)
+            
+            # backward pass
             optimizer.zero_grad()
             loss.backward()
             if epoch < args.warmup_epochs:
@@ -44,10 +44,18 @@ def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, m
                 for pg in optimizer.param_groups:
                     pg['lr'] = args.lr * lr_scale
             optimizer.step()
+
+        if args.en_wandb:
+            wandb.log({mode + "-Average-BPD" : loss_tracker.get_mean()})
+            wandb.log({mode + "-epoch": epoch})
+    # get prediction if validating
+    elif mode == 'val':
+        accuracy = classifier(model, data_loader, device)
+        if args.en_wandb:
+            wandb.log({mode + "-Accuracy" : accuracy})
+            wandb.log({mode + "-epoch": epoch})
         
-    if args.en_wandb:
-        wandb.log({mode + "-Average-BPD" : loss_tracker.get_mean()})
-        wandb.log({mode + "-epoch": epoch})
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -245,14 +253,15 @@ if __name__ == '__main__':
         
         # decrease learning rate
         scheduler.step()
-        train_or_test(model = model,
-                      data_loader = test_loader,
-                      optimizer = optimizer,
-                      loss_op = loss_op,
-                      device = device,
-                      args = args,
-                      epoch = epoch,
-                      mode = 'test')
+        # skip testing for now
+        # train_or_test(model = model,
+        #               data_loader = test_loader,
+        #               optimizer = optimizer,
+        #               loss_op = loss_op,
+        #               device = device,
+        #               args = args,
+        #               epoch = epoch,
+        #               mode = 'test')
         
         train_or_test(model = model,
                       data_loader = val_loader,

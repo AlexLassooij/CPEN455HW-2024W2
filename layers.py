@@ -126,6 +126,7 @@ class gated_resnet(nn.Module):
             self.nin_skip = nin(2 * skip_connection * num_filters, num_filters)
 
         # to project from filter + embedding dim back to original filter dim
+        # nin performs a 1x1 conv to convert from one dim to another
         if embedding_dim is not None:
             self.class_proj = nin(2 * num_filters + embedding_dim, 2 * num_filters)  # +32 for class embedding dim
 
