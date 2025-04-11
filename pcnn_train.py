@@ -281,9 +281,13 @@ if __name__ == '__main__':
                 sample_t = rescaling_inv(sample_t)
                 all_samples.append(sample_t)
                 
+            # print(len(all_samples))
+            # print(len(all_samples[0]))
+
             all_samples = torch.cat(all_samples, dim=0)
+            # print(all_samples.shape)
             save_images(all_samples, args.sample_dir)
-            sample_result = wandb.Image(sample_t, caption="epoch {}".format(epoch))
+            sample_result = wandb.Image(all_samples, caption="epoch {}".format(epoch))
             
             gen_data_dir = args.sample_dir
             ref_data_dir = args.data_dir +'/test'
