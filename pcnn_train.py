@@ -28,7 +28,6 @@ def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, m
             model_input = model_input.to(device)
             class_labels = [my_bidict[label] for label in class_labels]  # Convert text labels to indices
             class_labels = torch.tensor(class_labels, dtype=torch.long).to(device)
-            
             # if validation, get accuracy using classifier method
             # if test, skip for now until we are confident enough to produce good predictions
             # forward pass

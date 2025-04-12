@@ -110,6 +110,42 @@ class down_right_shifted_deconv2d(nn.Module):
         x = x[:, :, :(xs[2] - self.filter_size[0] + 1):, :(xs[3] - self.filter_size[1] + 1)]
         return x
 
+class FiLM(nn.Module):
+    def __init__(self, embedding_dim, num_filters, gamma_scale=1.5, hidden_dim=32):
+        super(FiLM, self).__init__()
+        
+        # Projection network to generate gamma and beta parameters
+        self.projection = nn.Sequential(
+            nn.Linear(embedding_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, num_filters),  # 4× because we need 2× for gamma and 2× for beta
+            nn.ReLU(),
+        )
+        
+        # Initialize weights properly to avoid gradient issues
+        nn.init.xavier_uniform_(self.projection[0].weight, gain=1.0)
+        nn.init.zeros_(self.projection[0].bias)
+        nn.init.xavier_uniform_(self.projection[3].weight, gain=1.0)
+        nn.init.zeros_(self.projection[3].bias)
+        
+        self.gamma_scale = gamma_scale  # Scaling factor for the conditioning strength
+        
+    def forward(self, x, class_embedding):
+        # Generate modulation parameters
+        gamma_beta = self.projection(class_embedding)  # [B, 4*num_filters]
+        
+        # Split into gamma and beta parameters
+        gamma, beta = gamma_beta.chunk(2, dim=1)  # Each: [B, 2*num_filters]
+        
+        # Reshape for broadcasting over spatial dimensions
+        gamma = gamma.view(gamma.size(0), gamma.size(1), 1, 1)  # [B, C, 1, 1]
+        beta = beta.view(beta.size(0), beta.size(1), 1, 1)      # [B, C, 1, 1]
+        
+        # Apply the FiLM transformation
+        output = (self.gamma_scale * gamma) * x + beta
+        
+        return output
 
 '''
 skip connection parameter : 0 = no skip connection
@@ -129,13 +165,7 @@ class gated_resnet(nn.Module):
         # to project from filter + embedding dim back to original filter dim
         # nin performs a 1x1 conv to convert from one dim to another
         if embedding_dim is not None:
-            self.film = nn.Sequential(
-                nn.Linear(embedding_dim, 128),
-                nn.LayerNorm(128),
-                nn.ReLU(),
-                nn.Linear(128, 4 * num_filters), # convert from embedding dim to expect dim (2 * nr_filter), multiply by two (4*nr_filter) because they get split into two
-                nn.ReLU(),
-            )
+            self.film = FiLM(embedding_dim, 4 * num_filters, gamma_scale=2.0, hidden_dim=32)
 
         # apply pre-norm, similar as from the transformer layer in PA2
         # use group norm instead because we're dealing with conv layers that have varying output dims
@@ -157,17 +187,7 @@ class gated_resnet(nn.Module):
         x = self.dropout(x)
         # print(f"In resnet {x.shape}")
         if class_embedding is not None:
-            gamma_beta = self.film(class_embedding)  # shape: [B, 2 * num_filters]
-            gamma, beta = gamma_beta.chunk(2, dim=1)  # Each: [B, num_filters]
-
-            # Reshape for broadcasting over spatial dims
-            gamma = gamma[:, :, None, None]  # [B, C, 1, 1]
-            beta = beta[:, :, None, None]
-            # pdb.set_trace()
-
-            # Apply FiLM modulation
-            gamma_scale = 1.5
-            x = (gamma_scale * gamma) * x + beta
+            x = self.film(x, class_embedding)
 
         x = self.conv_out(x)
         x = self.gn2(x)

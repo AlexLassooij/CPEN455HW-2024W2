@@ -96,6 +96,7 @@ class PixelCNN(nn.Module):
 
         num_mix = 3 if self.input_channels == 1 else 10
         self.nin_out = nin(nr_filters, num_mix * nr_logistic_mix)
+        
         self.init_padding = None
 
 
@@ -140,7 +141,18 @@ class PixelCNN(nn.Module):
                 u  = self.upsize_u_stream[i](u)
                 ul = self.upsize_ul_stream[i](ul)
 
-        x_out = self.nin_out(F.elu(ul))
+        ul_features = F.elu(ul)
+
+        if class_labels is not None:
+            # Make sure class_embedding is available here
+            # If class_embedding is not defined in this scope, get it from class_labels
+            if 'class_embedding' not in locals():
+                class_embedding = self.embedding(class_labels)
+            
+            # Apply FiLM conditioning to the output features
+            ul_features = self.output_film(ul_features, class_embedding)
+
+        x_out = self.nin_out(ul_features)
 
         # assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
 
@@ -194,6 +206,8 @@ class ConditionalPixelCNN(nn.Module):
 
         num_mix = 3 if self.input_channels == 1 else 10
         self.nin_out = nin(nr_filters, num_mix * nr_logistic_mix)
+        self.output_film = FiLM(embedding_dim, 2 * nr_filters, gamma_scale=2.0, hidden_dim=32)
+
         self.init_padding = None
 
 
@@ -255,7 +269,19 @@ class ConditionalPixelCNN(nn.Module):
                 u  = self.upsize_u_stream[i](u)
                 ul = self.upsize_ul_stream[i](ul)
 
-        x_out = self.nin_out(F.elu(ul))
+        ul_features = F.elu(ul)
+
+        if class_labels is not None:
+            # Make sure class_embedding is available here
+            # If class_embedding is not defined in this scope, get it from class_labels
+            if 'class_embedding' not in locals():
+                class_embedding = self.embedding(class_labels)
+            
+            # Apply FiLM conditioning to the output features
+            
+            ul_features = self.output_film(ul_features, class_embedding)
+
+        x_out = self.nin_out(ul_features)
 
         # assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
 
