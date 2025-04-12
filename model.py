@@ -206,7 +206,7 @@ class ConditionalPixelCNN(nn.Module):
 
         num_mix = 3 if self.input_channels == 1 else 10
         self.nin_out = nin(nr_filters, num_mix * nr_logistic_mix)
-        self.output_film = FiLM(embedding_dim, 2 * nr_filters, gamma_scale=2.0, hidden_dim=32)
+        self.output_film = FiLM(embedding_dim, 2 * nr_filters, gamma_scale=3.0, hidden_dim=32)
 
         self.init_padding = None
 

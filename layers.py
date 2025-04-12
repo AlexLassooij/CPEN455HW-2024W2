@@ -122,14 +122,13 @@ class FiLM(nn.Module):
             nn.Linear(hidden_dim, num_filters),  # 4× because we need 2× for gamma and 2× for beta
             nn.ReLU(),
         )
-        
+
+        self.gamma_scale = nn.Parameter(torch.tensor(gamma_scale))
         # Initialize weights properly to avoid gradient issues
         nn.init.xavier_uniform_(self.projection[0].weight, gain=1.0)
         nn.init.zeros_(self.projection[0].bias)
         nn.init.xavier_uniform_(self.projection[3].weight, gain=1.0)
         nn.init.zeros_(self.projection[3].bias)
-        
-        self.gamma_scale = gamma_scale  # Scaling factor for the conditioning strength
         
     def forward(self, x, class_embedding):
         # Generate modulation parameters
@@ -165,7 +164,7 @@ class gated_resnet(nn.Module):
         # to project from filter + embedding dim back to original filter dim
         # nin performs a 1x1 conv to convert from one dim to another
         if embedding_dim is not None:
-            self.film = FiLM(embedding_dim, 4 * num_filters, gamma_scale=2.0, hidden_dim=32)
+            self.film = FiLM(embedding_dim, 4 * num_filters, gamma_scale=3.0, hidden_dim=32)
 
         # apply pre-norm, similar as from the transformer layer in PA2
         # use group norm instead because we're dealing with conv layers that have varying output dims
