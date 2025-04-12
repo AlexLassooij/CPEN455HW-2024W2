@@ -17,4 +17,4 @@ python pcnn_train.py \
 --model conditional \
 --tag conditional_high_mix_concat \
 --scheduler step \
-# --en_wandb True
+--en_wandb True

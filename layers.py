@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils import weight_norm as wn
 from utils import *
+import pdb
 
 class nin(nn.Module):
     def __init__(self, dim_in, dim_out):
@@ -128,7 +129,15 @@ class gated_resnet(nn.Module):
         # to project from filter + embedding dim back to original filter dim
         # nin performs a 1x1 conv to convert from one dim to another
         if embedding_dim is not None:
-            self.class_proj = nin(2 * num_filters + embedding_dim, 2 * num_filters)  # +32 for class embedding dim
+            self.film = nn.Sequential(
+                nn.Linear(embedding_dim, 4 * num_filters), # convert from embedding dim to expect dim (2 * nr_filter), multiply by two (4*nr_filter) because they get split into two
+                nn.ReLU(),
+            )
+
+        # apply pre-norm, similar as from the transformer layer in PA2
+        # use group norm instead because we're dealing with conv layers that have varying output dims
+        self.gn1 = nn.GroupNorm(1, num_filters)
+        self.gn2 = nn.GroupNorm(1, 2 * num_filters)
 
         self.dropout = nn.Dropout2d(0.5)
         self.conv_out = conv_op(2 * num_filters, 2 * num_filters)
@@ -138,22 +147,26 @@ class gated_resnet(nn.Module):
         x = self.conv_input(self.nonlinearity(og_x))
         if a is not None :
             x += self.nin_skip(self.nonlinearity(a))
+        
+        x = self.gn1(x)
         x = self.nonlinearity(x)
+        # pdb.set_trace()
         x = self.dropout(x)
         # print(f"In resnet {x.shape}")
         if class_embedding is not None:
-            # print(f"Class embedding {class_embedding.shape}")
-            class_embedding = class_embedding.unsqueeze(-1).unsqueeze(-1)
-            
-            # class_embedding = class_embedding.expand(-1, -1, x.size(2), x.size(3))
-            embed_spatial = class_embedding.expand(-1, -1, 1, 1)  # Keep it as [batch, embed_dim, 1, 1]
-            embed_spatial = F.interpolate(embed_spatial, size=(x.size(2), x.size(3)), mode='nearest')
-            # print(f"After expand {embed_spatial.shape}")
-            x = torch.cat([x, embed_spatial], dim=1)
-            # print(f"After cat {x.shape}")
-            x = self.class_proj(x)
-            # print(f"After proj {x.shape}")
+            gamma_beta = self.film(class_embedding)  # shape: [B, 2 * num_filters]
+            gamma, beta = gamma_beta.chunk(2, dim=1)  # Each: [B, num_filters]
+
+            # Reshape for broadcasting over spatial dims
+            gamma = gamma[:, :, None, None]  # [B, C, 1, 1]
+            beta = beta[:, :, None, None]
+            # pdb.set_trace()
+
+            # Apply FiLM modulation
+            x = gamma * x + beta
+
         x = self.conv_out(x)
+        x = self.gn2(x)
         a, b = torch.chunk(x, 2, dim=1)
         c3 = a * F.sigmoid(b)
         return og_x + c3

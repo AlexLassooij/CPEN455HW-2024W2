@@ -13,6 +13,7 @@ from tqdm import tqdm
 from pprint import pprint
 import argparse
 from pytorch_fid.fid_score import calculate_fid_given_paths
+import pdb
 
 
 def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, mode = 'training'):
@@ -123,6 +124,8 @@ if __name__ == '__main__':
                         help='Learning rate decay, applied every step of the optimization')
     parser.add_argument('--min_lr', type=float, default=0.999995,
                         help='Learning rate decay, applied every step of the optimization')
+    parser.add_argument('--weight_decay', type=float, default=0.00001,
+                        help='Weight decay')
     parser.add_argument('--scheduler', type=str, default='step',
                         help='LR Scheduler')
     parser.add_argument('-b', '--batch_size', type=int, default=64,
@@ -255,25 +258,27 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(args.load_params))
         print('model parameters loaded')
 
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     if args.scheduler == 'step':
         print('Using step scheduler')
         scheduler = lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.lr_decay)
     elif args.scheduler == 'cosine':
         print('Using cosine annealing scheduler')
-        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.max_epochs, eta_min=args.min_lr
-)
+        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.max_epochs, eta_min=args.min_lr)
+
+    # pdb.set_trace()
+    
     
     for epoch in tqdm(range(args.max_epochs)):
-        # train_or_test(model = model, 
-        #               data_loader = train_loader, 
-        #               optimizer = optimizer, 
-        #               loss_op = loss_op, 
-        #               device = device, 
-        #               args = args, 
-        #               epoch = epoch, 
-        #               mode = 'training')
+        train_or_test(model = model, 
+                      data_loader = train_loader, 
+                      optimizer = optimizer, 
+                      loss_op = loss_op, 
+                      device = device, 
+                      args = args, 
+                      epoch = epoch, 
+                      mode = 'training')
         
         # # decrease learning rate
         # scheduler.step()
@@ -287,14 +292,14 @@ if __name__ == '__main__':
                       epoch = epoch,
                       mode = 'test')
         
-        # train_or_test(model = model,
-        #               data_loader = val_loader,
-        #               optimizer = optimizer,
-        #               loss_op = loss_op,
-        #               device = device,
-        #               args = args,
-        #               epoch = epoch,
-        #               mode = 'val')
+        train_or_test(model = model,
+                      data_loader = val_loader,
+                      optimizer = optimizer,
+                      loss_op = loss_op,
+                      device = device,
+                      args = args,
+                      epoch = epoch,
+                      mode = 'val')
         
         # generate samples to assess generative performance
         if epoch % args.sampling_interval == 0:

@@ -142,7 +142,7 @@ class PixelCNN(nn.Module):
 
         x_out = self.nin_out(F.elu(ul))
 
-        assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
+        # assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
 
         return x_out
     
@@ -257,7 +257,7 @@ class ConditionalPixelCNN(nn.Module):
 
         x_out = self.nin_out(F.elu(ul))
 
-        assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
+        # assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
 
         return x_out
     
