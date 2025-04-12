@@ -130,7 +130,10 @@ class gated_resnet(nn.Module):
         # nin performs a 1x1 conv to convert from one dim to another
         if embedding_dim is not None:
             self.film = nn.Sequential(
-                nn.Linear(embedding_dim, 4 * num_filters), # convert from embedding dim to expect dim (2 * nr_filter), multiply by two (4*nr_filter) because they get split into two
+                nn.Linear(embedding_dim, 128),
+                nn.LayerNorm(128),
+                nn.ReLU(),
+                nn.Linear(128, 4 * num_filters), # convert from embedding dim to expect dim (2 * nr_filter), multiply by two (4*nr_filter) because they get split into two
                 nn.ReLU(),
             )
 
@@ -163,7 +166,8 @@ class gated_resnet(nn.Module):
             # pdb.set_trace()
 
             # Apply FiLM modulation
-            x = gamma * x + beta
+            gamma_scale = 1.5
+            x = (gamma_scale * gamma) * x + beta
 
         x = self.conv_out(x)
         x = self.gn2(x)
