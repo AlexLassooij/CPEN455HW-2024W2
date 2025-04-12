@@ -47,7 +47,7 @@ def get_label(model, model_input, device):
                 nll = discretized_mix_logistic_loss(single_input, single_output)
                 all_nlls[i, class_idx] = nll
     
-    # Return the class indices with minimum NLL
+    # Return the class indices with minimum NLL (since NLL is negative, take min to get the max likelihood)
     _, predicted_labels = torch.min(all_nlls, dim=1)
     
     return predicted_labels

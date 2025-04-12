@@ -8,7 +8,7 @@ import wandb
 from utils import *
 from model import * 
 from dataset import *
-from classification_evaluation import classifier
+from classification_evaluation import classifier, get_label
 from tqdm import tqdm
 from pprint import pprint
 import argparse
@@ -16,6 +16,7 @@ from pytorch_fid.fid_score import calculate_fid_given_paths
 
 
 def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, mode = 'training'):
+    # train set
     if mode == 'training':
         model.train()
         deno =  args.batch_size * np.prod(args.obs) * np.log(2.)        
@@ -49,12 +50,35 @@ def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, m
             wandb.log({mode + "-Average-BPD" : loss_tracker.get_mean()})
             wandb.log({mode + "-epoch": epoch})
     # get prediction if validating
+    # val set
     elif mode == 'val':
         accuracy = classifier(model, data_loader, device)
         if args.en_wandb:
             wandb.log({mode + "-Accuracy" : accuracy})
             wandb.log({mode + "-epoch": epoch})
+    # pass predicted class as class label when passing test samples in forward pass 
+    # test set
+    else:
+        model.eval()
+        deno =  args.batch_size * np.prod(args.obs) * np.log(2.)        
+        loss_tracker = mean_tracker()
         
+        for batch_idx, item in enumerate(tqdm(data_loader)):
+            model_input, _ = item # no class labels for test set, predict most likely class for each input sample
+            model_input = model_input.to(device)
+            
+            predicted_classes = get_label(model, model_input, device)
+            # if validation, get accuracy using classifier method
+            # if test, skip for now until we are confident enough to produce good predictions
+            # forward pass
+            model_output = model(model_input, predicted_classes)
+            loss = loss_op(model_input, model_output)
+            loss_tracker.update(loss.item()/deno)
+
+        if args.en_wandb:
+            wandb.log({mode + "-Average-BPD" : loss_tracker.get_mean()})
+            wandb.log({mode + "-epoch": epoch})
+
     
 
 if __name__ == '__main__':
@@ -242,35 +266,35 @@ if __name__ == '__main__':
 )
     
     for epoch in tqdm(range(args.max_epochs)):
-        train_or_test(model = model, 
-                      data_loader = train_loader, 
-                      optimizer = optimizer, 
-                      loss_op = loss_op, 
-                      device = device, 
-                      args = args, 
-                      epoch = epoch, 
-                      mode = 'training')
+        # train_or_test(model = model, 
+        #               data_loader = train_loader, 
+        #               optimizer = optimizer, 
+        #               loss_op = loss_op, 
+        #               device = device, 
+        #               args = args, 
+        #               epoch = epoch, 
+        #               mode = 'training')
         
-        # decrease learning rate
-        scheduler.step()
+        # # decrease learning rate
+        # scheduler.step()
         # skip testing for now
-        # train_or_test(model = model,
-        #               data_loader = test_loader,
-        #               optimizer = optimizer,
-        #               loss_op = loss_op,
-        #               device = device,
-        #               args = args,
-        #               epoch = epoch,
-        #               mode = 'test')
-        
         train_or_test(model = model,
-                      data_loader = val_loader,
+                      data_loader = test_loader,
                       optimizer = optimizer,
                       loss_op = loss_op,
                       device = device,
                       args = args,
                       epoch = epoch,
-                      mode = 'val')
+                      mode = 'test')
+        
+        # train_or_test(model = model,
+        #               data_loader = val_loader,
+        #               optimizer = optimizer,
+        #               loss_op = loss_op,
+        #               device = device,
+        #               args = args,
+        #               epoch = epoch,
+        #               mode = 'val')
         
         # generate samples to assess generative performance
         if epoch % args.sampling_interval == 0:
