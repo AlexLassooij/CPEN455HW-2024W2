@@ -179,12 +179,14 @@ def sample_conditional(model, sample_batch_size, obs, sample_op, class_idx):
     with torch.no_grad():
         device = next(model.parameters()).device
         class_labels = torch.full((sample_batch_size,), class_idx, dtype=torch.long, device=device)
-        
+        # pdb.set_trace()
         data = torch.zeros(sample_batch_size, obs[0], obs[1], obs[2], device=device)
         for i in range(obs[1]):
             for j in range(obs[2]):
                 data_v = data
-                out   = model(data_v, class_labels, sample=True)
+                out  = model(data_v, class_labels, sample=True)
+                
+                # pdb.set_trace()
                 out_sample = sample_op(out)
                 data[:, :, i, j] = out_sample.data[:, :, i, j]
     return data

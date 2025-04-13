@@ -40,6 +40,7 @@ class CPEN455Dataset(Dataset):
 
     def __getitem__(self, idx):
         img_path, category = self.samples[idx]
+        # pdb.set_trace()
         if category in my_bidict.values():
             category_name = my_bidict.inverse[category]
         else:
@@ -55,6 +56,31 @@ class CPEN455Dataset(Dataset):
     
     def get_all_images(self, label):
         return [img for img, cat in self.samples if cat == label]
+    
+# i created another subclass of CPEN455Dataset to avoid modifying the original class
+# allows me to override the __getitem__ method to return the image path as well
+class CPEN455Dataset_test(CPEN455Dataset):
+    def __init__(self, root_dir = './data', mode='test', transform=None):
+        super(CPEN455Dataset_test, self).__init__(root_dir=root_dir, mode=mode, transform=transform)
+
+    
+    def __getitem__(self, idx):
+        img_path, category = self.samples[idx]
+        if category in my_bidict.values():
+            category_name = my_bidict.inverse[category]
+        else:
+            category_name = "Unknown"
+        # print(img_path)
+        image = read_image(img_path)  # Reads the image as a tensor
+        image = image.type(torch.float32) / 255.  # Normalize to [0, 1]
+        if image.shape[0] == 1:
+            image = replicate_color_channel(image)
+        if self.transform:
+          image = self.transform(image)
+        # pdb.set_trace()
+
+        return image, category_name, img_path.replace('data/', '')
+
 
 def show_images(images, categories, mode:str):
         fig, axs = plt.subplots(1, len(images), figsize=(15, 5))

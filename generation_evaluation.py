@@ -21,15 +21,17 @@ import argparse
 # This is a demonstration of how to call the sample function, feel free to modify it
 # You should modify this sample function to get the generated images from your model
 # You should save the generated images to the gen_data_dir, which is fixed as 'samples'
-sample_op = lambda x : sample_from_discretized_mix_logistic(x, 5)
-def my_sample(model, gen_data_dir, sample_batch_size = 25, obs = (3,32,32), sample_op = sample_op):
+
+sample_op = lambda x : sample_from_discretized_mix_logistic(x, 20) # important, match with the model
+def my_sample(model, gen_data_dir, sample_batch_size = 100, obs = (3,32,32), sample_op = sample_op):
     for label in my_bidict:
         print(f"Label: {label}")
         #generate images for each label, each label has 25 images
-        sample_t = sample(model, sample_batch_size, obs, sample_op)
+        class_idx = my_bidict[label]
+        samples_per_class = sample_batch_size // 4
+        sample_t = sample(model, samples_per_class, obs, sample_op)
         sample_t = rescaling_inv(sample_t)
         save_images(sample_t, os.path.join(gen_data_dir), label=label)
-    pass
 # End of your code
 
 if __name__ == "__main__":
@@ -49,9 +51,20 @@ if __name__ == "__main__":
 
     #TODO: Begin of your code
     #Load your model and generate images in the gen_data_dir, feel free to modify the model
-    model = PixelCNN(nr_resnet=1, nr_filters=40, input_channels=3, nr_logistic_mix=5)
+    model = ConditionalPixelCNN()
     model = model.to(device)
+
+    MODEL_NAME = 'models/film_output_learned_gamma/pcnn_cpen455_film_output_learned_gamma_from_scratch_199.pth'
+    # MODEL_NAME = 'models/pcnn_cpen455_film_output_learned_gamma_from_scratch_0.pth'
+    model_path = os.path.join(os.path.dirname(__file__), MODEL_NAME)
+    if os.path.exists(model_path):
+        model.load_state_dict(torch.load(model_path, map_location=device))
+        print('model parameters loaded')
+    else:
+        raise FileNotFoundError(f"Model file not found at {model_path}")
+    
     model = model.eval()
+
     #End of your code
     
     my_sample(model=model, gen_data_dir=gen_data_dir)

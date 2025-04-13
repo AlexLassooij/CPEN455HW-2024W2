@@ -270,35 +270,35 @@ if __name__ == '__main__':
     
     
     for epoch in tqdm(range(args.max_epochs)):
-        train_or_test(model = model, 
-                      data_loader = train_loader, 
-                      optimizer = optimizer, 
-                      loss_op = loss_op, 
-                      device = device, 
-                      args = args, 
-                      epoch = epoch, 
-                      mode = 'training')
+        # train_or_test(model = model, 
+        #               data_loader = train_loader, 
+        #               optimizer = optimizer, 
+        #               loss_op = loss_op, 
+        #               device = device, 
+        #               args = args, 
+        #               epoch = epoch, 
+        #               mode = 'training')
         
-        # # decrease learning rate
-        # scheduler.step()
-        # skip testing for now
-        train_or_test(model = model,
-                      data_loader = test_loader,
-                      optimizer = optimizer,
-                      loss_op = loss_op,
-                      device = device,
-                      args = args,
-                      epoch = epoch,
-                      mode = 'test')
+        # # # decrease learning rate
+        # # scheduler.step()
+        # # skip testing for now
+        # train_or_test(model = model,
+        #               data_loader = test_loader,
+        #               optimizer = optimizer,
+        #               loss_op = loss_op,
+        #               device = device,
+        #               args = args,
+        #               epoch = epoch,
+        #               mode = 'test')
         
-        train_or_test(model = model,
-                      data_loader = val_loader,
-                      optimizer = optimizer,
-                      loss_op = loss_op,
-                      device = device,
-                      args = args,
-                      epoch = epoch,
-                      mode = 'val')
+        # train_or_test(model = model,
+        #               data_loader = val_loader,
+        #               optimizer = optimizer,
+        #               loss_op = loss_op,
+        #               device = device,
+        #               args = args,
+        #               epoch = epoch,
+        #               mode = 'val')
         
         # generate samples to assess generative performance
         if epoch % args.sampling_interval == 0:
@@ -331,7 +331,7 @@ if __name__ == '__main__':
                             "FID": fid_score})
         
         # save checkpoint of model
-        if (epoch + 1) % args.save_interval == 0: 
+        if (epoch) % args.save_interval == 0: 
             if not os.path.exists("models"):
                 os.makedirs("models")
             torch.save(model.state_dict(), 'models/{}_{}.pth'.format(model_name, epoch))
