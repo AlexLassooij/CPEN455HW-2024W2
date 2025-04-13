@@ -114,32 +114,32 @@ class FiLM(nn.Module):
     def __init__(self, embedding_dim, num_filters, gamma_scale=1.5, hidden_dim=32):
         super(FiLM, self).__init__()
         
-        # Projection network to generate gamma and beta parameters
-        self.projection = nn.Sequential(
+        # network to generate gamma and beta parameters
+        self.film_net = nn.Sequential(
             nn.Linear(embedding_dim, hidden_dim),
             nn.LayerNorm(hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, num_filters),  # 4× because we need 2× for gamma and 2× for beta
-            nn.ReLU(),
+            nn.Tanh(), # keep pixels from getting too saturated
         )
 
         self.gamma_scale = nn.Parameter(torch.tensor(gamma_scale))
-        # Initialize weights properly to avoid gradient issues
-        nn.init.xavier_uniform_(self.projection[0].weight, gain=1.0)
-        nn.init.zeros_(self.projection[0].bias)
-        nn.init.xavier_uniform_(self.projection[3].weight, gain=1.0)
-        nn.init.zeros_(self.projection[3].bias)
+        # init the weights for the lienar layers
+        nn.init.xavier_uniform_(self.film_net[0].weight, gain=1.0)
+        nn.init.zeros_(self.film_net[0].bias)
+        nn.init.xavier_uniform_(self.film_net[3].weight, gain=1.0)
+        nn.init.zeros_(self.film_net[3].bias)
         
     def forward(self, x, class_embedding):
         # Generate modulation parameters
-        gamma_beta = self.projection(class_embedding)  # [B, 4*num_filters]
+        gamma_beta = self.film_net(class_embedding)
         
         # Split into gamma and beta parameters
-        gamma, beta = gamma_beta.chunk(2, dim=1)  # Each: [B, 2*num_filters]
+        gamma, beta = gamma_beta.chunk(2, dim=1)
         
         # Reshape for broadcasting over spatial dimensions
-        gamma = gamma.view(gamma.size(0), gamma.size(1), 1, 1)  # [B, C, 1, 1]
-        beta = beta.view(beta.size(0), beta.size(1), 1, 1)      # [B, C, 1, 1]
+        gamma = gamma.view(gamma.size(0), gamma.size(1), 1, 1)
+        beta = beta.view(beta.size(0), beta.size(1), 1, 1)
         
         # Apply the FiLM transformation
         output = (self.gamma_scale * gamma) * x + beta
