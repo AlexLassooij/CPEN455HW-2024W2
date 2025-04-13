@@ -160,8 +160,8 @@ class PixelCNN(nn.Module):
     
 ### START OF CONDITIONAL PIXELCNN ###
 class ConditionalPixelCNN(nn.Module):
-    def __init__(self, nr_resnet=5, nr_filters=80, nr_logistic_mix=10,
-                    resnet_nonlinearity='concat_elu', input_channels=3, num_classes=4, embedding_dim=32):
+    def __init__(self, nr_resnet=2, nr_filters=80, nr_logistic_mix=20,
+                    resnet_nonlinearity='concat_elu', input_channels=3, num_classes=4, embedding_dim=16):
         super(ConditionalPixelCNN, self).__init__()
         if resnet_nonlinearity == 'concat_elu' :
             self.resnet_nonlinearity = lambda x : concat_elu(x)

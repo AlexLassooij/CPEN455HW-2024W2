@@ -33,21 +33,20 @@ def get_label(model, model_input, device):
         all_nlls = torch.zeros(batch_size, NUM_CLASSES, device=device)
         
         for class_idx in range(NUM_CLASSES):
-            # Set up a batch where all samples are conditioned on the same class
+            # create a tensor with the same class label for the entire batch
             class_labels = torch.full((batch_size,), class_idx, dtype=torch.long, device=device)
             
-            # Forward pass with this class condition
+            # run particular class condition through model
             output = model(model_input, class_labels)
             
-            # Compute loss (negative log-likelihood) for each sample
+            # get the NLL for each sample
             for i in range(batch_size):
                 single_input = model_input[i:i+1]
                 single_output = output[i:i+1]
-                # This is the discretized mixture of logistics loss from PixelCNN++
                 nll = discretized_mix_logistic_loss(single_input, single_output)
                 all_nlls[i, class_idx] = nll
     
-    # Return the class indices with minimum NLL (since NLL is negative, take min to get the max likelihood)
+    # get most probable out of the all classes (since NLL is negative, take min to get the max likelihood)
     _, predicted_labels = torch.min(all_nlls, dim=1)
     
     return predicted_labels
@@ -92,7 +91,6 @@ if __name__ == '__main__':
                                              **kwargs)
 
     #TODO:Begin of your code
-    #You should replace the random classifier with your trained model
     model = ConditionalPixelCNN(NUM_CLASSES)
     #End of your code
     
@@ -100,13 +98,13 @@ if __name__ == '__main__':
     #Attention: the path of the model is fixed to './models/conditional_pixelcnn.pth'
     #You should save your model to this path
     # 'models/conditional_pixelcnn.pth'
-    # MODEL_NAME = 'models/conditional_lr_mod/pcnn_cpen455_conditional_lr_mod_from_scratch_349.pth'
-    # model_path = os.path.join(os.path.dirname(__file__), MODEL_NAME)
-    # if os.path.exists(model_path):
-    #     model.load_state_dict(torch.load(model_path, map_location=device))
-    #     print('model parameters loaded')
-    # else:
-    #     raise FileNotFoundError(f"Model file not found at {model_path}")
+    MODEL_NAME = 'models/film_output_learned_gamma/pcnn_cpen455_film_output_learned_gamma_from_scratch_199.pth'
+    model_path = os.path.join(os.path.dirname(__file__), MODEL_NAME)
+    if os.path.exists(model_path):
+        model.load_state_dict(torch.load(model_path, map_location=device))
+        print('model parameters loaded')
+    else:
+        raise FileNotFoundError(f"Model file not found at {model_path}")
     model.eval()
     
     acc = classifier(model = model, data_loader = dataloader, device = device)
