@@ -120,7 +120,7 @@ class FiLM(nn.Module):
             nn.LayerNorm(hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, num_filters),  # 4× because we need 2× for gamma and 2× for beta
-            nn.Tanh(), # keep pixels from getting too saturated
+            nn.ReLU(), # keep pixels from getting too saturated
         )
 
         self.gamma_scale = nn.Parameter(torch.tensor(gamma_scale))
