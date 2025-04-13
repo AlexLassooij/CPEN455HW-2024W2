@@ -29,7 +29,8 @@ def my_sample(model, gen_data_dir, sample_batch_size = 100, obs = (3,32,32), sam
         #generate images for each label, each label has 25 images
         class_idx = my_bidict[label]
         samples_per_class = sample_batch_size // 4
-        sample_t = sample(model, samples_per_class, obs, sample_op)
+        # sample_t = sample(model, samples_per_class, obs, sample_op)
+        sample_t = sample_conditional(model, samples_per_class, obs, sample_op, class_idx)
         sample_t = rescaling_inv(sample_t)
         save_images(sample_t, os.path.join(gen_data_dir), label=label)
 # End of your code
