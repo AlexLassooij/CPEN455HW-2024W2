@@ -132,14 +132,14 @@ class FiLM(nn.Module):
         
     def forward(self, x, class_embedding):
         # Generate modulation parameters
-        gamma_beta = self.projection(class_embedding)  # [B, 4*num_filters]
+        gamma_beta = self.projection(class_embedding)
         
         # Split into gamma and beta parameters
-        gamma, beta = gamma_beta.chunk(2, dim=1)  # Each: [B, 2*num_filters]
+        gamma, beta = gamma_beta.chunk(2, dim=1)
         
         # Reshape for broadcasting over spatial dimensions
-        gamma = gamma.view(gamma.size(0), gamma.size(1), 1, 1)  # [B, C, 1, 1]
-        beta = beta.view(beta.size(0), beta.size(1), 1, 1)      # [B, C, 1, 1]
+        gamma = gamma.view(gamma.size(0), gamma.size(1), 1, 1)
+        beta = beta.view(beta.size(0), beta.size(1), 1, 1)
         
         # Apply the FiLM transformation
         output = (self.gamma_scale * gamma) * x + beta
@@ -180,17 +180,19 @@ class gated_resnet(nn.Module):
         if a is not None :
             x += self.nin_skip(self.nonlinearity(a))
         
-        x = self.gn1(x)
+        # x = self.gn1(x)
         x = self.nonlinearity(x)
         # pdb.set_trace()
-        if class_embedding is not None:
-            x = self.film(x, class_embedding)
-        x = self.dropout(x)
-        # print(f"In resnet {x.shape}")
         
+        x = self.dropout(x)
 
         x = self.conv_out(x)
         x = self.gn2(x)
+        # pdb.set_trace()
+
+        if class_embedding is not None:
+            x = self.film(x, class_embedding)
+
         a, b = torch.chunk(x, 2, dim=1)
         c3 = a * F.sigmoid(b)
         return og_x + c3
