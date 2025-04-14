@@ -131,6 +131,7 @@ class FiLM(nn.Module):
         nn.init.zeros_(self.projection[3].bias)
         
     def forward(self, x, class_embedding):
+        og_x = x
         # Generate modulation parameters
         gamma_beta = self.projection(class_embedding)
         
@@ -142,7 +143,7 @@ class FiLM(nn.Module):
         beta = beta.view(beta.size(0), beta.size(1), 1, 1)
         
         # Apply the FiLM transformation
-        output = (self.gamma_scale * gamma) * x + beta
+        output = og_x + (self.gamma_scale * gamma) * x + beta
         
         return output
 
@@ -164,7 +165,7 @@ class gated_resnet(nn.Module):
         # to project from filter + embedding dim back to original filter dim
         # nin performs a 1x1 conv to convert from one dim to another
         if embedding_dim is not None:
-            self.film = FiLM(embedding_dim, 4 * num_filters, gamma_scale=3.0, hidden_dim=32)
+            self.film = FiLM(embedding_dim, 4 * num_filters, gamma_scale=2.0, hidden_dim=32)
 
         # apply pre-norm, similar as from the transformer layer in PA2
         # use group norm instead because we're dealing with conv layers that have varying output dims
@@ -180,7 +181,7 @@ class gated_resnet(nn.Module):
         if a is not None :
             x += self.nin_skip(self.nonlinearity(a))
         
-        # x = self.gn1(x)
+        x = self.gn1(x)
         x = self.nonlinearity(x)
         # pdb.set_trace()
         
