@@ -41,7 +41,7 @@ def get_label(model, model_input, device):
             
             # get the NLL for each sample
             for i in range(batch_size):
-                single_input = model_input[i:i+1]
+                single_input = model_input[i:i+1] 
                 single_output = output[i:i+1]
                 nll = discretized_mix_logistic_loss(single_input, single_output)
                 all_nlls[i, class_idx] = nll

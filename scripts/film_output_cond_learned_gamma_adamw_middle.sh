@@ -8,13 +8,13 @@ python pcnn_train.py \
 --nr_filters 80 \
 --nr_logistic_mix 20 \
 --lr 0.0002 \
---lr_decay 0.99995 \
+--lr_decay 0.999995 \
 --min_lr 0.00015 \
 --weight_decay 0.00001 \
---max_epochs 200 \
---warmup_epochs 50 \
+--max_epochs 225 \
+--warmup_epochs 25 \
 --embedding_dim 16 \
 --model conditional \
---tag film_output_learned_gamma \
+--tag film_output_learned_gamma_adamw_middle \
 --scheduler step \
 --en_wandb True

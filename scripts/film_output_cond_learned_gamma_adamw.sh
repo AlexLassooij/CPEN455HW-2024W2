@@ -8,7 +8,7 @@ python pcnn_train.py \
 --nr_filters 80 \
 --nr_logistic_mix 20 \
 --lr 0.0002 \
---lr_decay 0.999995 \
+--lr_decay 0.9995 \
 --min_lr 0.00015 \
 --weight_decay 0.00001 \
 --max_epochs 200 \
@@ -17,4 +17,4 @@ python pcnn_train.py \
 --model conditional \
 --tag film_output_learned_gamma_adamw \
 --scheduler step \
---en_wandb True
+# --en_wandb True
