@@ -2,6 +2,7 @@
 .idea/
 wandb
 *log
+models
 data/MNIST
 data/Imagenet*
 samples/*.jpg
