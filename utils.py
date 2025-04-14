@@ -33,7 +33,7 @@ def log_prob_from_logits(x):
     return x - m - torch.log(torch.sum(torch.exp(x - m), dim=axis, keepdim=True))
 
 
-def discretized_mix_logistic_loss(x, l):
+def discretized_mix_logistic_loss(x, l, temperature=0.8):
     """ log-likelihood for mixture of discretized logistics, assumes the data has been rescaled to [-1,1] interval """
     # Pytorch ordering
     x = x.permute(0, 2, 3, 1)
@@ -48,7 +48,8 @@ def discretized_mix_logistic_loss(x, l):
     means = l[:, :, :, :, :nr_mix]
     # log_scales = torch.max(l[:, :, :, :, nr_mix:2 * nr_mix], -7.)
     log_scales = torch.clamp(l[:, :, :, :, nr_mix:2 * nr_mix], min=-7.)
-   
+    
+    log_scales = log_scales + torch.log(torch.tensor(temperature, device=log_scales.device))
     coeffs = F.tanh(l[:, :, :, :, 2 * nr_mix:3 * nr_mix])
     # here and below: getting the means and adjusting them based on preceding
     # sub-pixels
@@ -109,7 +110,7 @@ def to_one_hot(tensor, n, fill_with=1.):
     return Variable(one_hot)
 
 
-def sample_from_discretized_mix_logistic(l, nr_mix):
+def sample_from_discretized_mix_logistic(l, nr_mix, temperature=0.8):
     # Pytorch ordering
     l = l.permute(0, 2, 3, 1)
     ls = [int(y) for y in l.size()]
@@ -131,6 +132,7 @@ def sample_from_discretized_mix_logistic(l, nr_mix):
     means = torch.sum(l[:, :, :, :, :nr_mix] * sel, dim=4)
     log_scales = torch.clamp(torch.sum(
         l[:, :, :, :, nr_mix:2 * nr_mix] * sel, dim=4), min=-7.)
+    log_scales = log_scales + torch.log(torch.tensor(temperature, device=log_scales.device))
     coeffs = torch.sum(F.tanh(
         l[:, :, :, :, 2 * nr_mix:3 * nr_mix]) * sel, dim=4)
     # sample from logistic & clip to interval

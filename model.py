@@ -43,6 +43,7 @@ class PixelCNNLayer_down(nn.Module):
                                         resnet_nonlinearity, skip_connection=2, embedding_dim=embedding_dim)
                                             for _ in range(nr_resnet)])
     
+    # additional u_list and ul_list arguments to pass the downsampled u and ul (skip connection)
     def forward(self, u, ul, u_list, ul_list, class_embedding=None,):
         for i in range(self.nr_resnet):
             # forward call of gated_resnet, takes in og_x, optionally a
@@ -155,7 +156,6 @@ class PixelCNN(nn.Module):
         x_out = self.nin_out(ul_features)
 
         # assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
-
         return x_out
     
 ### START OF CONDITIONAL PIXELCNN ###
@@ -177,6 +177,7 @@ class ConditionalPixelCNN(nn.Module):
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
 
+        # adjust this in graph
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
         self.down_layers = nn.ModuleList([PixelCNNLayer_down(down_nr_resnet[i], nr_filters,
                                                 self.resnet_nonlinearity, self.embedding_dim) for i in range(3)])
@@ -207,6 +208,7 @@ class ConditionalPixelCNN(nn.Module):
         num_mix = 3 if self.input_channels == 1 else 10
         self.nin_out = nin(nr_filters, num_mix * nr_logistic_mix)
         self.output_film = FiLM(embedding_dim, 2 * nr_filters, gamma_scale=3.0, hidden_dim=32)
+        # self.middle_film = FiLM(embedding_dim, 2 * nr_filters, gamma_scale=3.0, hidden_dim=32)
 
         self.init_padding = None
 
@@ -259,6 +261,10 @@ class ConditionalPixelCNN(nn.Module):
         u  = u_list.pop()
         ul = ul_list.pop()
 
+        # u = self.middle_film(u, class_embedding)
+        # ul = self.middle_film(ul, class_embedding)
+
+
         for i in range(3):
             # resnet block
             # forward call of each PixelCNNLayer_down resnet (has two gated resnets each, down and left-down)
@@ -272,18 +278,12 @@ class ConditionalPixelCNN(nn.Module):
         ul_features = F.elu(ul)
 
         if class_labels is not None:
-            # Make sure class_embedding is available here
-            # If class_embedding is not defined in this scope, get it from class_labels
-            if 'class_embedding' not in locals():
-                class_embedding = self.embedding(class_labels)
-            
-            # Apply FiLM conditioning to the output features
             
             ul_features = self.output_film(ul_features, class_embedding)
 
         x_out = self.nin_out(ul_features)
 
-        # assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
+        assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
 
         return x_out
     
