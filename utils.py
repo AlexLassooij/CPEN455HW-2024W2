@@ -33,7 +33,7 @@ def log_prob_from_logits(x):
     return x - m - torch.log(torch.sum(torch.exp(x - m), dim=axis, keepdim=True))
 
 
-def discretized_mix_logistic_loss(x, l, temperature=1.0):
+def discretized_mix_logistic_loss(x, l, temperature=1.2):
     """ log-likelihood for mixture of discretized logistics, assumes the data has been rescaled to [-1,1] interval """
     # Pytorch ordering
     x = x.permute(0, 2, 3, 1)
@@ -110,7 +110,7 @@ def to_one_hot(tensor, n, fill_with=1.):
     return Variable(one_hot)
 
 
-def sample_from_discretized_mix_logistic(l, nr_mix, temperature=1.0):
+def sample_from_discretized_mix_logistic(l, nr_mix, temperature=1.2):
     # Pytorch ordering
     l = l.permute(0, 2, 3, 1)
     ls = [int(y) for y in l.size()]

@@ -119,7 +119,7 @@ class FiLM(nn.Module):
             nn.Linear(embedding_dim, hidden_dim),
             nn.LayerNorm(hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, num_filters),  # 4× because we need 2× for gamma and 2× for beta
+            nn.Linear(hidden_dim, num_filters),  
             nn.ReLU(),
         )
 
@@ -180,19 +180,17 @@ class gated_resnet(nn.Module):
         if a is not None :
             x += self.nin_skip(self.nonlinearity(a))
         
-        # x = self.gn1(x)
+        x = self.gn1(x)
         x = self.nonlinearity(x)
         # pdb.set_trace()
-        
+        if class_embedding is not None:
+            x = self.film(x, class_embedding)
         x = self.dropout(x)
+        # print(f"In resnet {x.shape}")
+        
 
         x = self.conv_out(x)
         x = self.gn2(x)
-        # pdb.set_trace()
-
-        if class_embedding is not None:
-            x = self.film(x, class_embedding)
-
         a, b = torch.chunk(x, 2, dim=1)
         c3 = a * F.sigmoid(b)
         return og_x + c3
