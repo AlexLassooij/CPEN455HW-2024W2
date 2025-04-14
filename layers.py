@@ -183,10 +183,11 @@ class gated_resnet(nn.Module):
         x = self.gn1(x)
         x = self.nonlinearity(x)
         # pdb.set_trace()
-        x = self.dropout(x)
-        # print(f"In resnet {x.shape}")
         if class_embedding is not None:
             x = self.film(x, class_embedding)
+        x = self.dropout(x)
+        # print(f"In resnet {x.shape}")
+        
 
         x = self.conv_out(x)
         x = self.gn2(x)
