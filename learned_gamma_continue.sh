@@ -7,7 +7,7 @@ python pcnn_train.py \
 --nr_resnet 2 \
 --nr_filters 80 \
 --nr_logistic_mix 20 \
---lr 0.0002 \
+--lr 0.00018 \
 --lr_decay 0.99995 \
 --min_lr 0.00015 \
 --weight_decay 0.00001 \
