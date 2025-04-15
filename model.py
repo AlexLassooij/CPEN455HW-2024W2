@@ -179,7 +179,8 @@ class ConditionalPixelCNN(nn.Module):
 
         # adjust this in graph
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
-        self.down_layers = nn.ModuleList([PixelCNNLayer_down(down_nr_resnet[i], nr_filters,
+        down_nr_filters = [nr_filters] + [nr_filters + 20] + [nr_filters + 40]
+        self.down_layers = nn.ModuleList([PixelCNNLayer_down(down_nr_resnet[i], down_nr_filters[i],
                                                 self.resnet_nonlinearity, self.embedding_dim) for i in range(3)])
 
         self.up_layers = nn.ModuleList([PixelCNNLayer_up(nr_resnet, nr_filters,

@@ -4,6 +4,7 @@ wandb
 *log
 data/MNIST
 models
+predictions
 data/Imagenet*
 samples/*.jpg
 
