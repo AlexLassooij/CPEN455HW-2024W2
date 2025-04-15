@@ -303,7 +303,7 @@ if __name__ == '__main__':
                       mode = 'val')
         
         # generate samples to assess generative performance
-        if epoch % args.sampling_interval == 0:
+        if epoch % args.sampling_interval == 0 or epoch == args.max_epochs - 1:
             print('......sampling......')
             all_samples = []
             for class_idx in range(4):
