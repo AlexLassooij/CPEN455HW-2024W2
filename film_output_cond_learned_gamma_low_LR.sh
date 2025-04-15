@@ -17,4 +17,4 @@ python pcnn_train.py \
 --model conditional \
 --tag film_output_learned_gamma_low_LR \
 --scheduler step \
-# --en_wandb True
+--en_wandb True
