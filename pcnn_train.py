@@ -257,7 +257,7 @@ if __name__ == '__main__':
         model.load_state_dict(torch.load(args.load_params, map_location=device))
         print('model parameters loaded')
 
-    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     if args.scheduler == 'step':
         print('Using step scheduler')
