@@ -15,6 +15,6 @@ python pcnn_train.py \
 --warmup_epochs 25 \
 --embedding_dim 16 \
 --model conditional \
---tag film_output_learned_gamma \
+--tag film_output_learned_gamma_grad_clip \
 --scheduler step \
 --en_wandb True
