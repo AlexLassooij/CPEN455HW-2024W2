@@ -5,9 +5,9 @@ python pcnn_train.py \
 --save_interval 25 \
 --dataset cpen455 \
 --nr_resnet 2 \
---nr_filters 60 \
---nr_logistic_mix 20 \
---lr 0.0002 \
+--nr_filters 100 \
+--nr_logistic_mix 25 \
+--lr 0.00015 \
 --lr_decay 0.99995 \
 --min_lr 0.00015 \
 --weight_decay 0.00001 \
@@ -15,6 +15,6 @@ python pcnn_train.py \
 --warmup_epochs 50 \
 --embedding_dim 16 \
 --model conditional \
---tag film_output_learned_gamma_progressive_f \
+--tag film_output_learned_gamma_low_LR \
 --scheduler step \
---en_wandb True
+# --en_wandb True
