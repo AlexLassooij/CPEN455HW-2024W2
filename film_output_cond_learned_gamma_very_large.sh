@@ -1,0 +1,20 @@
+python pcnn_train.py \
+--batch_size 64 \
+--sample_batch_size 8 \
+--sampling_interval 25 \
+--save_interval 25 \
+--dataset cpen455 \
+--nr_resnet 2 \
+--nr_filters 120 \
+--nr_logistic_mix 50 \
+--lr 0.0002 \
+--lr_decay 0.99995 \
+--min_lr 0.00015 \
+--weight_decay 0.00001 \
+--max_epochs 200 \
+--warmup_epochs 25 \
+--embedding_dim 16 \
+--model conditional \
+--tag film_output_learned_gamma_v_large \
+--scheduler step \
+--en_wandb True

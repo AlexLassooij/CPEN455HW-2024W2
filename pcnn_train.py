@@ -38,7 +38,7 @@ def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, m
             # backward pass
             optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
+            # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
 
             if epoch < args.warmup_epochs:
                 # Linear warmup
