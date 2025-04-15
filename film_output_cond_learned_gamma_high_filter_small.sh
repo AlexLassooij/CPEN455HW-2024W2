@@ -11,7 +11,7 @@ python pcnn_train.py \
 --lr_decay 0.99995 \
 --min_lr 0.00015 \
 --weight_decay 0.00001 \
---max_epochs 200 \
+--max_epochs 275 \
 --warmup_epochs 50 \
 --embedding_dim 16 \
 --model conditional \
