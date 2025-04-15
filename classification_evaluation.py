@@ -40,11 +40,14 @@ def get_label(model, model_input, device):
             output = model(model_input, class_labels)
             
             # get the NLL for each sample
-            for i in range(batch_size):
-                single_input = model_input[i:i+1]
-                single_output = output[i:i+1]
-                nll = discretized_mix_logistic_loss(single_input, single_output)
-                all_nlls[i, class_idx] = nll
+            # Process batch at once instead of sample by sample
+            loss = discretized_mix_logistic_loss(model_input, output) 
+            all_nlls[:, class_idx] = loss
+            # for i in range(batch_size):
+            #     single_input = model_input[i:i+1]
+            #     single_output = output[i:i+1]
+            #     nll = discretized_mix_logistic_loss(single_input, single_output)
+            #     all_nlls[i, class_idx] = nll
     
     # get most probable out of the all classes (since NLL is negative, take min to get the max likelihood)
     _, predicted_labels = torch.min(all_nlls, dim=1)

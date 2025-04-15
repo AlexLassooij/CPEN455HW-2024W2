@@ -119,8 +119,10 @@ class FiLM(nn.Module):
             nn.Linear(embedding_dim, hidden_dim),
             nn.LayerNorm(hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, num_filters),  
+            nn.Linear(hidden_dim, hidden_dim),  # Added an extra layer
             nn.ReLU(),
+            nn.Linear(hidden_dim, num_filters),
+            nn.Tanh()
         )
 
         self.gamma_scale = nn.Parameter(torch.tensor(gamma_scale))
