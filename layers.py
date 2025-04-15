@@ -119,10 +119,8 @@ class FiLM(nn.Module):
             nn.Linear(embedding_dim, hidden_dim),
             nn.LayerNorm(hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),  # Added an extra layer
+            nn.Linear(hidden_dim, num_filters),  
             nn.ReLU(),
-            nn.Linear(hidden_dim, num_filters),
-            nn.Tanh()
         )
 
         self.gamma_scale = nn.Parameter(torch.tensor(gamma_scale))
@@ -173,7 +171,7 @@ class gated_resnet(nn.Module):
         self.gn1 = nn.GroupNorm(1, num_filters)
         self.gn2 = nn.GroupNorm(1, 2 * num_filters)
 
-        self.dropout = nn.Dropout2d(0.5)
+        self.dropout = nn.Dropout2d(0.3)
         self.conv_out = conv_op(2 * num_filters, 2 * num_filters)
 
 
