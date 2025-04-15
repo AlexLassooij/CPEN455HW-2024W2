@@ -118,9 +118,9 @@ class FiLM(nn.Module):
         self.projection = nn.Sequential(
             nn.Linear(embedding_dim, hidden_dim),
             nn.LayerNorm(hidden_dim),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim),  # Added an extra layer
-            nn.ELU(),
+            nn.ReLU(),
             nn.Linear(hidden_dim, num_filters),
             nn.ELU()
         )
