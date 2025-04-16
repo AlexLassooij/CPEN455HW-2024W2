@@ -126,3 +126,5 @@ if __name__ == '__main__':
     if args.en_wandb:
         wandb.log({"samples": sample_result,
                     "FID": fid_score})
+        
+# NOT USED

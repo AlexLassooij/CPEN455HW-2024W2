@@ -1,0 +1,20 @@
+python pcnn_train.py \
+--batch_size 32 \
+--sample_batch_size 8 \
+--sampling_interval 25 \
+--save_interval 50 \
+--dataset cpen455 \
+--nr_resnet 2 \
+--nr_filters 64 \
+--nr_logistic_mix 10 \
+--lr 0.0002 \
+--lr_decay 0.999995 \
+--min_lr 0.00015 \
+--weight_decay 0.00001 \
+--max_epochs 350 \
+--warmup_epochs 50 \
+--embedding_dim 16 \
+--model conditional \
+--tag film_output_cond \
+--scheduler step \
+--en_wandb True

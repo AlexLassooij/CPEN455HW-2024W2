@@ -1,0 +1,17 @@
+python pcnn_train.py \
+--batch_size 32 \
+--sample_batch_size 16 \
+--sampling_interval 50 \
+--save_interval 50 \
+--dataset cpen455 \
+--nr_resnet 4 \
+--nr_filters 100 \
+--nr_logistic_mix 10 \
+--lr 0.0002 \
+--min_lr 0.00015 \
+--max_epochs 500 \
+--warmup_epochs 150 \
+--embedding_dim 64 \
+--model conditional \
+--tag conditional_lr \
+--en_wandb True

@@ -55,8 +55,7 @@ if __name__ == "__main__":
     model = ConditionalPixelCNN()
     model = model.to(device)
 
-    MODEL_NAME = 'models/film_output_learned_gamma/pcnn_cpen455_film_output_learned_gamma_from_scratch_199.pth'
-    # MODEL_NAME = 'models/pcnn_cpen455_film_output_learned_gamma_from_scratch_0.pth'
+    MODEL_NAME = 'models/conditional_pixelcnn.pth'
     model_path = os.path.join(os.path.dirname(__file__), MODEL_NAME)
     if os.path.exists(model_path):
         model.load_state_dict(torch.load(model_path, map_location=device))

@@ -97,8 +97,8 @@ if __name__ == '__main__':
     model = model.to(device)
     #Attention: the path of the model is fixed to './models/conditional_pixelcnn.pth'
     #You should save your model to this path
-    # 'models/conditional_pixelcnn.pth'
-    MODEL_NAME = 'models/film_output_learned_gamma/pcnn_cpen455_film_output_learned_gamma_from_scratch_199.pth'
+    
+    MODEL_NAME = 'models/conditional_pixelcnn.pth'
     # MODEL_NAME = 'models/pcnn_cpen455_film_output_learned_gamma_from_scratch_0.pth'
     model_path = os.path.join(os.path.dirname(__file__), MODEL_NAME)
     if os.path.exists(model_path):
